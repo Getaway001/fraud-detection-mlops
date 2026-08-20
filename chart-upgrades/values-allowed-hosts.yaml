@@ -1,0 +1,7 @@
+serverAllowedHosts:
+  - "mlflow.mlops.svc.cluster.local"
+  - "mlflow"
+  - "localhost"
+  - "localhost:5000"
+  - "127.0.0.1"
+  - "127.0.0.1:5000"

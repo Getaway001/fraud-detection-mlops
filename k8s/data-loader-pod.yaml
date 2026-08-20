@@ -1,0 +1,26 @@
+# Pod "utilitaire" qui ne fait rien d'autre qu'exister, pour permettre de
+# copier le CSV brut dans le PVC partagé via `kubectl cp` (on ne peut pas
+# copier directement dans un PVC sans passer par un pod qui le monte).
+# À supprimer une fois la copie faite (voir README, section "Upload des
+# données").
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fraud-data-loader
+  namespace: mlops
+  labels:
+    app: fraud-detection
+    role: data-loader
+spec:
+  containers:
+    - name: loader
+      image: busybox
+      command: ["sh", "-c", "mkdir -p /app/data/raw /app/data/processed && sleep 3600"]
+      volumeMounts:
+        - name: data
+          mountPath: /app/data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: fraud-data-pvc
+  restartPolicy: Never

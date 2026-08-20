@@ -1,0 +1,44 @@
+executor: KubernetesExecutor
+
+webserverSecretKey: "un-secret-a-changer-mais-suffisant-pour-apprendre"
+
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      enabled: true
+
+redis:
+  enabled: false   # inutile avec KubernetesExecutor
+
+webserver:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+scheduler:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      memory: 1Gi
+
+triggerer:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+statsd:
+  enabled: false   # métriques, pas nécessaire pour apprendre
+
+dags:
+  persistence:
+    enabled: true
+    size: 1Gi

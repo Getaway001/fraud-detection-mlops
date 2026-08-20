@@ -1,0 +1,16 @@
+# PersistentVolumeClaim partagé entre les Jobs du pipeline (feature
+# engineering écrit data/processed, tuning le relit). Approche simple pour
+# apprendre le pipeline ; sera remplacée par MinIO/un feature store plus
+# tard pour un vrai partage multi-nœuds (ReadWriteOnce ne fonctionne que
+# sur un seul nœud à la fois, suffisant pour minikube).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fraud-data-pvc
+  namespace: mlops
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi

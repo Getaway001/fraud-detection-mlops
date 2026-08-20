@@ -1,0 +1,18 @@
+artifactRoot:
+  proxiedArtifactStorage: true
+  s3:
+    enabled: true
+    bucket: "mlflow"
+
+minio:
+  enabled: true
+  mode: standalone
+  rootUser: "minioadmin"
+  rootPassword: "minioadmin123"
+  buckets:
+    - name: mlflow
+      policy: none
+      purge: false
+  persistence:
+    enabled: true
+    size: 10Gi

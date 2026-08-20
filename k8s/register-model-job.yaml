@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fraud-register-model-job
+  namespace: mlops
+  labels:
+    app: fraud-detection
+    step: register-model
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: fraud-detection
+        step: register-model
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: register-model
+          image: fraud-detection:latest
+          imagePullPolicy: Never
+          command: ["python", "-m", "src.registry.register_model"]
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow.mlops.svc.cluster.local"
+            - name: OPTUNA_METRIC
+              value: "f1"
+          # Pas besoin du PVC ici : cette étape ne parle qu'à l'API MLflow,
+          # elle n'accède à aucun fichier de données local.

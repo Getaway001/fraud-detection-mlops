@@ -40,5 +40,11 @@ statsd:
 
 dags:
   persistence:
+    enabled: false
+  gitSync:
     enabled: true
-    size: 1Gi
+    repo: https://github.com/Getaway001/fraud-detection-mlops.git
+    branch: main
+    subPath: "airflow/dags"
+    depth: 1
+    period: 60s   # intervalle de synchronisation avec Git

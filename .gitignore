@@ -1,6 +1,4 @@
 # Données volumineuses ou générées — non versionnées
-data/raw/*
-!data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
 

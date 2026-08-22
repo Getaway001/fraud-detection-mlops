@@ -46,6 +46,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Préparer le nom d'image en minuscules
+        # Docker exige des noms d'image entièrement en minuscules ;
+        # github.repository garde la casse réelle du compte (ex: Getaway001),
+        # ce qui casse le build sans cette conversion.
+        id: image
+        run: echo "name=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
       - name: Build et push de l'image
         uses: docker/build-push-action@v5
         with:
@@ -53,5 +60,5 @@ jobs:
           file: docker/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ steps.image.outputs.name }}:latest
+            ghcr.io/${{ steps.image.outputs.name }}:${{ github.sha }}

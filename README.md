@@ -270,6 +270,12 @@ pytest tests/
 
 ## Démarrage rapide
 
+Depuis la mise en place du CI/CD (GitHub Actions), l'image Docker est
+automatiquement buildée et publiée sur GitHub Container Registry
+(`ghcr.io/getaway001/fraud-detection-mlops:latest`) à chaque push sur
+`main` — plus besoin de builder l'image manuellement en local ni de la
+charger dans minikube.
+
 ```powershell
 # 0. Créer le PVC partagé et y charger le dataset brut (une seule fois)
 kubectl apply -f k8s/data-pvc.yaml
@@ -278,11 +284,8 @@ kubectl cp data/raw/Fraud_Detection_Dataset.csv `
   mlops/fraud-data-loader:/app/data/raw/Fraud_Detection_Dataset.csv
 kubectl delete pod fraud-data-loader -n mlops
 
-# 1. Build de l'image (une seule image pour toutes les étapes)
-docker build -t fraud-detection:latest -f docker/Dockerfile .
-minikube image load fraud-detection:latest
-
-# 2. Test manuel étape par étape (optionnel, avant de passer par Airflow)
+# 1. Test manuel étape par étape (optionnel, avant de passer par Airflow)
+#    Les Jobs utilisent directement l'image publiée sur GHCR.
 kubectl apply -f k8s/feature-engineering-job.yaml
 kubectl logs -n mlops -l step=feature-engineering -f
 
@@ -292,17 +295,18 @@ kubectl logs -n mlops -l step=tuning -f
 kubectl apply -f k8s/register-model-job.yaml
 kubectl logs -n mlops -l step=register-model -f
 
-# 3. Déploiement du DAG dans Airflow (copie dans scheduler ET dag-processor)
-kubectl cp airflow/dags/fraud_detection_pipeline_dag.py `
-  mlops/<pod-scheduler>:/opt/airflow/dags/ -c scheduler
-kubectl cp airflow/dags/fraud_detection_pipeline_dag.py `
-  mlops/<pod-dag-processor>:/opt/airflow/dags/ -c dag-processor
-
-# 4. Déclenchement depuis l'UI Airflow (http://localhost:8080)
-#    ou en ligne de commande :
+# 2. Déclenchement depuis l'UI Airflow (http://localhost:8080)
+#    Le DAG est synchronisé automatiquement depuis Git (gitSync), plus
+#    besoin de kubectl cp pour le déployer.
+#    Déclenchement en ligne de commande :
 kubectl exec -it <pod-scheduler> -n mlops -c scheduler -- `
   airflow dags trigger fraud_detection_pipeline
 ```
+
+**Note sur `imagePullPolicy: Always`** : chaque exécution retélécharge la
+dernière image publiée par le CI/CD — pratique en apprentissage pour
+toujours avoir le code à jour, mais à reconsidérer en production (préférer
+un tag versionné explicite plutôt que `:latest`, pour la reproductibilité).
 
 ## Structure du projet
 

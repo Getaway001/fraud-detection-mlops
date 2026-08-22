@@ -17,8 +17,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: register-model
-          image: fraud-detection:latest
-          imagePullPolicy: Never
+          image: ghcr.io/getaway001/fraud-detection-mlops:latest
+          imagePullPolicy: Always
           command: ["python", "-m", "src.registry.register_model"]
           env:
             - name: MLFLOW_TRACKING_URI

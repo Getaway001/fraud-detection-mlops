@@ -17,8 +17,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: feature-engineering
-          image: fraud-detection:latest
-          imagePullPolicy: Never   # image locale chargée via `minikube image load`
+          image: ghcr.io/getaway001/fraud-detection-mlops:latest
+          imagePullPolicy: Always   # toujours retélécharger la dernière image publiée par le CI/CD
           command: ["python", "-m", "src.features.build_features"]
           env:
             - name: RAW_DATA_PATH

@@ -22,7 +22,7 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 from kubernetes.client import models as k8s
 
 NAMESPACE = "mlops"
-IMAGE = "fraud-detection:latest"
+IMAGE = "ghcr.io/getaway001/fraud-detection-mlops:latest"
 
 MLFLOW_TRACKING_URI = "http://mlflow.mlops.svc.cluster.local"
 
@@ -50,7 +50,7 @@ with DAG(
         name="fraud-feature-engineering",
         namespace=NAMESPACE,
         image=IMAGE,
-        image_pull_policy="Never",
+        image_pull_policy="Always",
         cmds=["python", "-m", "src.features.build_features"],
         env_vars={
             "RAW_DATA_PATH": "/app/data/raw/Fraud_Detection_Dataset.csv",
@@ -67,7 +67,7 @@ with DAG(
         name="fraud-hyperparameter-tuning",
         namespace=NAMESPACE,
         image=IMAGE,
-        image_pull_policy="Never",
+        image_pull_policy="Always",
         cmds=["python", "-m", "src.training.tune"],
         env_vars={
             "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
@@ -86,7 +86,7 @@ with DAG(
         name="fraud-register-best-model",
         namespace=NAMESPACE,
         image=IMAGE,
-        image_pull_policy="Never",
+        image_pull_policy="Always",
         cmds=["python", "-m", "src.registry.register_model"],
         env_vars={
             "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,

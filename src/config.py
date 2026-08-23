@@ -21,6 +21,13 @@ EXPERIMENT_NAME = os.environ.get("MLFLOW_EXPERIMENT_NAME", "fraud-detection")
 REGISTERED_MODEL_NAME = os.environ.get("REGISTERED_MODEL_NAME", "fraud-detection-model")
 CHAMPION_ALIAS = "champion"
 
+# Bucket MinIO utilisé par MLflow pour stocker les artefacts (modèles, etc.),
+# configuré dans chart-upgrades/values-artifacts.yaml (artifactRoot.s3.bucket).
+# Nécessaire pour convertir un chemin "mlflow-artifacts:/..." (schéma proxy
+# interne à MLflow) en une vraie URI S3 ("s3://...") utilisable directement
+# par des outils externes comme KServe.
+MLFLOW_ARTIFACT_BUCKET = os.environ.get("MLFLOW_ARTIFACT_BUCKET", "mlflow")
+
 # --- Données ---
 # En local (développement), ces chemins pointent vers le dossier du projet.
 # Sur Kubernetes, ils pointent vers le PersistentVolumeClaim partagé monté

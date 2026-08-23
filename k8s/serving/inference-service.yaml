@@ -21,7 +21,7 @@ spec:
       modelFormat:
         name: mlflow
       protocolVersion: v2
-      storageUri: "s3://mlflow/2/5eab9f5c9c9742da92093ded126420c7/artifacts/model"
+      storageUri: "s3://mlflow/2/308e79092c5348efbb96669cf09a5f05/artifacts/model"
       resources:
         requests:
           cpu: "200m"

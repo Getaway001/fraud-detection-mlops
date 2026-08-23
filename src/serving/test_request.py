@@ -28,23 +28,41 @@ NUM_SAMPLES = int(os.environ.get("NUM_SAMPLES", 5))
 def build_v2_payload(X: pd.DataFrame) -> dict:
     """
     Construit un payload conforme à l'Open Inference Protocol V2 : un input
-    par colonne, nommé exactement comme la colonne du DataFrame.
+    par colonne, nommé exactement comme la colonne du DataFrame, avec le
+    type de données V2 correspondant au type pandas réel de la colonne.
 
     Fonctionne à condition que le modèle ait été loggé avec une signature
     MLflow (voir train.py, log_model(..., input_example=...)) — c'est elle
     qui permet à MLServer/MLflow de reconstruire correctement un DataFrame
-    à partir de ces tenseurs nommés avant l'appel au modèle. Sans
-    signature, la requête n'est pas décodée et est transmise brute au
-    modèle, qui échoue (voir historique de debug dans la conversation).
+    à partir de ces tenseurs nommés avant l'appel au modèle.
+
+    Important : le type de chaque colonne doit correspondre exactement au
+    schéma inféré par MLflow (ex: colonnes entières comme
+    Previous_Fraudulent_Transactions doivent rester des entiers, pas être
+    converties en float) — MLflow refuse une conversion float -> int jugée
+    "non sûre" et lève une MlflowException si les types ne correspondent
+    pas (voir historique de debug : "Can not safely convert float64 to
+    int64").
     """
     inputs = []
     for column in X.columns:
-        values = X[column].astype(float).tolist()
+        series = X[column]
+
+        if pd.api.types.is_bool_dtype(series):
+            datatype = "BOOL"
+            values = series.astype(bool).tolist()
+        elif pd.api.types.is_integer_dtype(series):
+            datatype = "INT64"
+            values = series.astype("int64").tolist()
+        else:
+            datatype = "FP64"
+            values = series.astype("float64").tolist()
+
         inputs.append(
             {
                 "name": column,
                 "shape": [len(values)],
-                "datatype": "FP64",
+                "datatype": datatype,
                 "data": values,
             }
         )

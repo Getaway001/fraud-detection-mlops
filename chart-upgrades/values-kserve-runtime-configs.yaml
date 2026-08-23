@@ -1,0 +1,8 @@
+# Chart : kserve-runtime-configs (ClusterServingRuntime pour les formats de
+# modèles standards : sklearn, xgboost, mlflow, etc. via MLServer)
+# Installation :
+#   helm install kserve-runtime-configs oci://ghcr.io/kserve/charts/kserve-runtime-configs \
+#     --version v0.20.0 -n kserve -f chart-upgrades/values-kserve-runtime-configs.yaml
+kserve:
+  servingruntime:
+    enabled: true

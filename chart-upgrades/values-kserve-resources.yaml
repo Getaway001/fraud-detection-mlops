@@ -1,0 +1,12 @@
+# Chart : kserve-resources (controller KServe + webhooks + CRDs de config)
+# Installation :
+#   helm install kserve oci://ghcr.io/kserve/charts/kserve-resources \
+#     --version v0.20.0 -n kserve -f chart-upgrades/values-kserve-resources.yaml
+#
+# Mode "Standard" = ancien "RawDeployment" (renommé à partir de la v0.16) :
+# déploiement via Deployment/Service Kubernetes classiques, sans Knative.
+# Choisi pour rester léger sur minikube (pas de scale-to-zero nécessaire
+# pour de l'apprentissage).
+kserve:
+  controller:
+    deploymentMode: Standard

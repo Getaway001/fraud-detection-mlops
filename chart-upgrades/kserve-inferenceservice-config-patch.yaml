@@ -1,0 +1,31 @@
+# Ce fichier n'est PAS un values Helm — c'est la documentation du patch
+# `kubectl patch` appliqué manuellement à la ConfigMap `inferenceservice-config`
+# (namespace kserve) après l'installation des charts Helm.
+#
+# Pourquoi : sur minikube, on ne veut ni Istio ni Gateway API (trop lourd
+# pour de l'apprentissage). Ce patch désactive complètement la création
+# d'ingress par KServe — les InferenceService restent accessibles via leur
+# Service Kubernetes classique (ClusterIP), qu'on interroge via
+# `kubectl port-forward`, comme pour MLflow/Airflow.
+#
+# À réappliquer si la ConfigMap est réinitialisée (ex: upgrade Helm sans
+# --reuse-values, ou réinstallation complète).
+#
+# Commande (PowerShell) :
+#
+#   kubectl patch configmap/inferenceservice-config -n kserve --type=strategic -p '{\"data\": {\"ingress\": \"{\\\"disableIstioVirtualHost\\\": true, \\\"disableIngressCreation\\\": true, \\\"enableGatewayApi\\\": false, \\\"ingressGateway\\\": \\\"disabled\\\", \\\"ingressService\\\": \\\"disabled\\\"}\"}}'
+#
+# Puis redémarrer le controller pour appliquer le changement :
+#
+#   kubectl rollout restart deployment/kserve-controller-manager -n kserve
+#
+# Contenu logique du patch (valeur de la clé "ingress" dans la ConfigMap,
+# reformaté ici en YAML pour lisibilité — la vraie valeur est une chaîne
+# JSON, comme montré dans la commande ci-dessus) :
+
+ingress:
+  disableIstioVirtualHost: true
+  disableIngressCreation: true
+  enableGatewayApi: false
+  ingressGateway: disabled
+  ingressService: disabled

@@ -27,20 +27,28 @@ NUM_SAMPLES = int(os.environ.get("NUM_SAMPLES", 5))
 
 def build_v2_payload(X: pd.DataFrame) -> dict:
     """
-    Construit un payload conforme à l'Open Inference Protocol V2 (le
-    protocole standard partagé par KServe/Seldon/Triton), attendu par
-    MLServer pour les modèles chargés via le runtime MLflow.
+    Construit un payload conforme à l'Open Inference Protocol V2 : un input
+    par colonne, nommé exactement comme la colonne du DataFrame.
+
+    Fonctionne à condition que le modèle ait été loggé avec une signature
+    MLflow (voir train.py, log_model(..., input_example=...)) — c'est elle
+    qui permet à MLServer/MLflow de reconstruire correctement un DataFrame
+    à partir de ces tenseurs nommés avant l'appel au modèle. Sans
+    signature, la requête n'est pas décodée et est transmise brute au
+    modèle, qui échoue (voir historique de debug dans la conversation).
     """
-    return {
-        "inputs": [
+    inputs = []
+    for column in X.columns:
+        values = X[column].astype(float).tolist()
+        inputs.append(
             {
-                "name": "input-0",
-                "shape": list(X.shape),
+                "name": column,
+                "shape": [len(values)],
                 "datatype": "FP64",
-                "data": X.values.tolist(),
+                "data": values,
             }
-        ]
-    }
+        )
+    return {"inputs": inputs}
 
 
 def main():

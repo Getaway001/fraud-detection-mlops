@@ -74,7 +74,12 @@ def train_and_log(params: dict, X_train, X_test, y_train, y_test, log_model: boo
     mlflow.log_metrics(metrics)
 
     if log_model:
-        mlflow.sklearn.log_model(model, "model")
+        # input_example permet à MLflow d'inférer automatiquement une
+        # signature (types/noms des colonnes attendues). Sans elle, KServe/
+        # MLServer ne savent pas convertir une requête V2 en DataFrame
+        # avant l'appel au modèle, et la prédiction échoue en production
+        # (erreur observée : "float() argument ... not 'InferenceRequest'").
+        mlflow.sklearn.log_model(model, "model", input_example=X_train.iloc[:5])
 
     return model, metrics
 

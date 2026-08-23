@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fraud-test-inference-job
+  namespace: mlops
+  labels:
+    app: fraud-detection
+    step: test-inference
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: fraud-detection
+        step: test-inference
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: test-inference
+          image: ghcr.io/getaway001/fraud-detection-mlops:latest
+          imagePullPolicy: Always
+          command: ["python", "-m", "src.serving.test_request"]
+          env:
+            - name: PROCESSED_DIR
+              value: "/app/data/processed"
+            - name: NUM_SAMPLES
+              value: "5"
+            # PREDICTOR_URL garde sa valeur par défaut (DNS interne du
+            # service KServe), pas besoin de la surcharger ici.
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: fraud-data-pvc

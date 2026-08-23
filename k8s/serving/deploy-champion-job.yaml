@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fraud-deploy-champion-job
+  namespace: mlops
+  labels:
+    app: fraud-detection
+    step: deploy-champion
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: fraud-detection
+        step: deploy-champion
+    spec:
+      serviceAccountName: fraud-deploy-sa
+      restartPolicy: Never
+      containers:
+        - name: deploy-champion
+          image: ghcr.io/getaway001/fraud-detection-mlops:latest
+          imagePullPolicy: Always
+          command: ["python", "-m", "src.registry.deploy_champion"]
+          env:
+            - name: MLFLOW_TRACKING_URI
+              value: "http://mlflow.mlops.svc.cluster.local"

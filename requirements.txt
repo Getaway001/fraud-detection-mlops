@@ -6,3 +6,4 @@ optuna==4.0.0
 pyarrow==17.0.0
 pytest==8.3.3
 requests==2.32.3
+kubernetes>=28,<32

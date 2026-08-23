@@ -2,13 +2,20 @@
 DAG orchestrant le pipeline complet de détection de fraude :
 
     feature_engineering  ->  hyperparameter_tuning  ->  register_best_model
+        ->  deploy_champion_model
 
 Chaque étape est un pod Kubernetes éphémère (KubernetesPodOperator), créé à
 la demande par le KubernetesExecutor. Les deux premières étapes partagent
 un PersistentVolumeClaim (`fraud-data-pvc`) pour faire transiter les
 données : `feature_engineering` y écrit les features, `hyperparameter_tuning`
-les relit. `register_best_model` ne parle qu'à l'API MLflow, pas besoin du
-volume.
+les relit. `register_best_model` et `deploy_champion_model` ne parlent
+qu'aux API MLflow/Kubernetes, pas besoin du volume.
+
+`deploy_champion_model` ferme la boucle MLOps : si `register_best_model` a
+promu un nouveau `@champion`, cette tâche met automatiquement à jour
+l'InferenceService KServe pour qu'il serve ce nouveau modèle (rolling
+update automatique) — plus besoin d'intervention manuelle entre une
+promotion de modèle et son déploiement effectif.
 
 Déclenchement manuel pour l'instant (schedule=None), le temps de valider le
 pipeline de bout en bout. Voir le README pour la logique détaillée de
@@ -38,7 +45,7 @@ DATA_VOLUME_MOUNT = k8s.V1VolumeMount(name="data", mount_path="/app/data")
 
 with DAG(
     dag_id="fraud_detection_pipeline",
-    description="Feature engineering -> Optuna tuning -> Model Registry",
+    description="Feature engineering -> Optuna tuning -> Model Registry -> Deploy",
     schedule=None,  # déclenchement manuel, le temps de valider le pipeline
     start_date=datetime(2026, 1, 1),
     catchup=False,
@@ -96,4 +103,21 @@ with DAG(
         is_delete_operator_pod=True,
     )
 
-    feature_engineering >> hyperparameter_tuning >> register_best_model
+    deploy_champion_model = KubernetesPodOperator(
+        task_id="deploy_champion_model",
+        name="fraud-deploy-champion",
+        namespace=NAMESPACE,
+        image=IMAGE,
+        image_pull_policy="Always",
+        # ServiceAccount dédié, avec les permissions RBAC pour lire/modifier
+        # l'InferenceService KServe (voir k8s/serving/deploy-rbac.yaml).
+        service_account_name="fraud-deploy-sa",
+        cmds=["python", "-m", "src.registry.deploy_champion"],
+        env_vars={
+            "MLFLOW_TRACKING_URI": MLFLOW_TRACKING_URI,
+        },
+        get_logs=True,
+        is_delete_operator_pod=True,
+    )
+
+    feature_engineering >> hyperparameter_tuning >> register_best_model >> deploy_champion_model
